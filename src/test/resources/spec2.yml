@@ -1,0 +1,46 @@
+---
+swagger: '2.0'
+info:
+  title: Test spec
+  version: 0.0.1
+basePath: /api
+paths:
+  /traits2/{id}:
+    get:
+      tags:
+        - spec2
+      operationId: getValues2
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Value2'
+definitions:
+  Value2:
+    type: object
+    properties:
+      name:
+        $ref: '#/definitions/Name2'
+      value:
+        type: string
+      daate:
+        type: string
+        format: date-time
+      ctr:
+        type: number
+      companyUUID:
+        type: string
+        format: uuid
+  Name2:
+    type: string
+    enum:
+      - FIRS
+      - LAST

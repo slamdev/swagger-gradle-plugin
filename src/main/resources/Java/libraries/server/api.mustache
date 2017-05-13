@@ -1,0 +1,55 @@
+package {{package}};
+
+{{#imports}}import {{import}};
+{{/imports}}
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+{{^fullJavaUtil}}
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+{{/fullJavaUtil}}
+
+import static org.springframework.http.HttpStatus.OK;
+
+{{>generatedAnnotation}}
+@RestController
+@RequestMapping
+public interface {{classname}} {
+{{#operations}}
+{{#operation}}
+
+    @RequestMapping(value = "{{basePathWithoutHost}}{{{path}}}",{{#singleContentTypes}}
+        produces = "{{{vendorExtensions.x-accepts}}}",
+        consumes = "{{{vendorExtensions.x-contentType}}}",{{/singleContentTypes}}{{^singleContentTypes}}{{#hasProduces}}
+        produces = { {{#produces}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/produces}} }, {{/hasProduces}}{{#hasConsumes}}
+        consumes = { {{#consumes}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/consumes}} },{{/hasConsumes}}{{/singleContentTypes}}
+        method = RequestMethod.{{httpMethod}}
+    )
+    default ResponseEntity<{{>returnTypes}}> {{operationId}}Api({{#allParams}}{{>queryParams}}{{>pathParams}}{{>headerParams}}{{>bodyParams}}{{>formParams}}{{#hasMore}},{{/hasMore}}{{/allParams}}) {
+        {{#hasReference}}
+        return toResponse({{operationId}}({{#allParams}}{{paramName}}{{#hasMore}},{{/hasMore}}{{/allParams}}));
+        {{/hasReference}}
+        {{^hasReference}}
+        {{operationId}}({{#allParams}}{{paramName}}{{#hasMore}},{{/hasMore}}{{/allParams}});
+        return toResponse();
+        {{/hasReference}}
+    }
+
+    {{#hasReference}}{{>returnTypes}} {{/hasReference}}{{^hasReference}}void {{/hasReference}}{{operationId}}({{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}},{{/hasMore}}{{/allParams}});
+{{/operation}}
+{{/operations}}
+
+    default <T> ResponseEntity<T> toResponse(T result) {
+        return new ResponseEntity<>(result, OK);
+    }
+
+    default ResponseEntity<Void> toResponse() {
+        return new ResponseEntity<Void>(OK);
+    }
+}

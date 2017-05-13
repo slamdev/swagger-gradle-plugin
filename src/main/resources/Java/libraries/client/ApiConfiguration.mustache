@@ -1,0 +1,33 @@
+package {{invokerPackage}};
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.web.client.RestTemplate;
+
+class ApiConfiguration {
+
+    private static final String BASE_PATH = "{{basePathWithoutHost}}";
+
+    private final String url;
+
+    private final RestTemplate restTemplate;
+
+    @Autowired
+    public ApiConfiguration(RestTemplateBuilder restTemplateBuilder, {{=<% %>=}}@Value("${<%pathVariableName%>}")<%={{ }}=%> String url) {
+        restTemplate = restTemplateBuilder.rootUri(strip(url) + "/" + strip(BASE_PATH)).build();
+        this.url = url;
+    }
+{{#apiInfo}}{{#apis}}
+    @Bean
+    {{classname}} provide{{classname}}() {
+        return new {{classname}}(restTemplate);
+    }
+{{/apis}}{{/apiInfo}}
+    private static String strip(String s) {
+        return s.replaceAll("/$|^/", "");
+    }
+}

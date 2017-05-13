@@ -1,0 +1,28 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'groovy'
+    id 'idea'
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+ext {
+    failOnBadCoverage = false
+    failOnStaticChecks = true
+}
+
+apply from: "${rootProject.projectDir}/gradle/validation.gradle"
+apply from: "${rootProject.projectDir}/gradle/coverage.gradle"
+apply from: "${rootProject.projectDir}/gradle/ideaAnnotationProcessor.gradle"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile('io.swagger:swagger-codegen:2.2.2') {
+        exclude module: 'slf4j-simple'
+    }
+    testCompile 'junit:junit:4.12'
+}

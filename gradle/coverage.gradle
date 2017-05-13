@@ -1,0 +1,80 @@
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = '0.7.9'
+}
+
+ext {
+    failBuild = project.failOnBadCoverage
+    limits = [
+            'instruction': 80,
+            'branch'     : 80,
+            'line'       : 80,
+            'complexity' : 80,
+            'method'     : 80,
+            'class'      : 80
+    ]
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.destination "${buildDir}/reports/jacoco"
+    }
+
+    afterEvaluate {
+        List additionalExcludes = project.hasProperty('excludeFromCoverage') ? project.excludeFromCoverage : []
+        classDirectories = files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ['**/integration/**', '**/business/**/entity/**'] + additionalExcludes)
+        })
+    }
+
+    doLast {
+        File report = file("${jacoco.reportsDir}/test/jacocoTestReport.xml")
+        logger.lifecycle("Checking coverage results: ${report}")
+
+        XmlParser parser = new XmlParser()
+        parser.setFeature('http://apache.org/xml/features/nonvalidating/load-external-dtd', false);
+        parser.setFeature('http://apache.org/xml/features/disallow-doctype-decl', false)
+        Node results = parser.parse(report)
+
+        def percentage = {
+            double covered = (it?.'@covered' ?: 0) as Double
+            double missed = (it?.'@missed' ?: 0) as Double
+            ((covered / (covered + missed)) * 100).round(2)
+        }
+
+        def counters = results.counter
+        Map metrics = [:]
+        metrics << [
+                'instruction': percentage(counters.find { (it.'@type' == 'INSTRUCTION') }),
+                'branch'     : percentage(counters.find { (it.'@type' == 'BRANCH') }),
+                'line'       : percentage(counters.find { (it.'@type' == 'LINE') }),
+                'complexity' : percentage(counters.find { (it.'@type' == 'COMPLEXITY') }),
+                'method'     : percentage(counters.find { (it.'@type' == 'METHOD') }),
+                'class'      : percentage(counters.find { (it.'@type' == 'CLASS') })
+        ]
+
+        List failures = []
+        metrics.each {
+            def limit = limits[it.key as String]
+            if (it.value < limit) {
+                failures.add("- ${it.key} coverage rate is: ${it.value}%, minimum is ${limit}%")
+            }
+        }
+
+        if (failures) {
+            logger.quiet('------------------ Code Coverage Failed -----------------------')
+            failures.each {
+                logger.quiet('{}', it)
+            }
+            logger.quiet('---------------------------------------------------------------')
+            if (failBuild) {
+                throw new GradleException('Code coverage failed')
+            }
+        } else {
+            logger.quiet('Passed Code Coverage Checks')
+        }
+    }
+}
+check.dependsOn jacocoTestReport

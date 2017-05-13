@@ -1,0 +1,93 @@
+apply plugin: 'pmd'
+
+pmd {
+    toolVersion = '5.5.5'
+    ignoreFailures = !project.failOnStaticChecks
+    consoleOutput = false
+}
+
+tasks.withType(Pmd) {
+    if (name == 'pmdMain') {
+        ruleSetFiles = files("${rootProject.projectDir}/config/pmd/ruleSetMain.xml")
+        ruleSets = []
+    } else {
+        ruleSetFiles = files("${rootProject.projectDir}/config/pmd/ruleSetTest.xml")
+        ruleSets = []
+    }
+}
+
+apply plugin: 'checkstyle'
+
+checkstyle {
+    toolVersion = '7.6.1'
+    ignoreFailures = !project.failOnStaticChecks
+    showViolations = false
+
+    repositories {
+        mavenCentral()
+        maven {
+            url 'http://sevntu-checkstyle.github.com/sevntu.checkstyle/maven2'
+        }
+    }
+}
+
+tasks.withType(Checkstyle) {
+    if (name == 'checkstyleMain') {
+        //noinspection GroovyAssignabilityCheck
+        configFile = file("${rootProject.projectDir}/config/checkstyle/checkstyleMain.xml")
+    } else {
+        //noinspection GroovyAssignabilityCheck
+        configFile = file("${rootProject.projectDir}/config/checkstyle/checkstyleTest.xml")
+    }
+}
+
+apply plugin: 'findbugs'
+
+findbugs {
+    toolVersion = '3.0.1'
+    ignoreFailures = !project.failOnStaticChecks
+    effort = 'max'
+    reportLevel = 'low'
+}
+
+tasks.withType(FindBugs) {
+    if (name == 'findbugsMain') {
+        excludeFilter = file("${rootProject.projectDir}/config/findbugs/excludeMain.xml")
+    } else {
+        excludeFilter = file("${rootProject.projectDir}/config/findbugs/excludeTest.xml")
+
+    }
+    pluginClasspath = project.configurations.findbugsPlugins
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+apply plugin: 'codenarc'
+
+codenarc {
+    toolVersion = '0.27.0'
+    ignoreFailures = false
+}
+
+tasks.withType(CodeNarc) {
+    if (name == 'codenarcTest') {
+        configFile = file('config/codenarc/codenarcTest.groovy')
+    } else {
+        configFile = file('config/codenarc/codenarcMain.groovy')
+        source file('build.gradle')
+        source file('gradle/validation.gradle')
+        source file('gradle/coverage.gradle')
+        source file('gradle/ideaAnnotationProcessor.gradle')
+    }
+    logging.level = LogLevel.ERROR
+}
+
+dependencies {
+    findbugsPlugins 'com.mebigfatguy.fb-contrib:fb-contrib:6.8.4'
+    findbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.6.0'
+    findbugsPlugins 'com.digitalreasoning.sdp:findbugs-extensions-drs:1.1.0'
+    checkstyle 'com.thomasjensen.checkstyle.addons:checkstyle-addons:4.0.0'
+    checkstyle 'com.github.sevntu.checkstyle:sevntu-checks:1.23.1'
+}
