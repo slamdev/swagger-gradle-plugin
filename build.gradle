@@ -2,6 +2,7 @@ plugins {
     id 'java-gradle-plugin'
     id 'groovy'
     id 'idea'
+    id 'com.gradle.plugin-publish' version '0.9.7'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -25,4 +26,17 @@ dependencies {
         exclude module: 'slf4j-simple'
     }
     testCompile 'junit:junit:4.12'
+}
+
+pluginBundle {
+    website = 'https://github.com/slamdev/swagger-gradle-plugin'
+    vcsUrl = 'https://github.com/slamdev/swagger-gradle-plugin'
+    description = 'Swagger codegen plugin'
+    tags = ['swagger']
+    plugins {
+        swaggerPlugin {
+            id = 'com.github.slamdev.swagger'
+            displayName = 'Swagger codegen plugin'
+        }
+    }
 }
