@@ -27,18 +27,18 @@ import org.gradle.api.publish.maven.internal.publication.DefaultMavenPublication
 import org.gradle.api.publish.maven.internal.publisher.MavenProjectIdentity
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.SourceSetOutput
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.internal.typeconversion.NotationParser
+import org.gradle.plugins.ide.idea.IdeaPlugin
+import org.gradle.plugins.ide.idea.model.IdeaModel
 
 import javax.inject.Inject
 
 @CompileStatic
 class SwaggerPlugin implements Plugin<Project> {
 
-    static final boolean DISABLE_CLIENT = true
     static final String GROUP = 'swagger'
     static final String API_DIRECTORY = 'rest-api'
     static final String MAIN_SOURCE_SET = 'main'
@@ -67,21 +67,26 @@ class SwaggerPlugin implements Plugin<Project> {
     void apply(Project project) {
         SwaggerExtension extension = project.extensions.create('swagger', SwaggerExtension)
         project.plugins.apply(JavaPlugin)
-        createGenerateApiTask(project)
-        configureSourceSet(project)
-        if (extension.generateClient && !DISABLE_CLIENT) {
-            project.plugins.apply(MavenPublishPlugin)
-            createSwaggerConfiguration(project)
-            createGenerateClientTask(project)
-            createCompileClientTask(project)
-            createPackageClientTask(project)
-            createPublication(project)
+        project.plugins.apply(IdeaPlugin)
+        project.afterEvaluate {
+            createGenerateApiTask(project)
+            configureSourceSet(project)
+            if (extension.generateClient) {
+                project.plugins.apply(MavenPublishPlugin)
+                createSwaggerConfiguration(project)
+                createGenerateClientTask(project)
+                createCompileClientTask(project)
+                createPackageClientTask(project)
+                createPublication(project)
+            }
         }
     }
 
     static void configureSourceSet(Project project) {
-        SourceSetOutput output = getMainSourceSet(project).output
-        output.dir(['builtBy': 'generateApi'] as Map, API_OUTPUT_DIR(project))
+        SourceSet sourceSet = getMainSourceSet(project)
+        sourceSet.java.srcDir(API_OUTPUT_DIR(project))
+        IdeaModel idea = project.extensions.getByType(IdeaModel)
+        idea.module.generatedSourceDirs += project.file(API_OUTPUT_DIR(project))
     }
 
     static Configuration createSwaggerConfiguration(Project project) {
@@ -168,6 +173,7 @@ class SwaggerPlugin implements Plugin<Project> {
         task.apiNamePrefix = toClassName(project.name)
         task.client = false
         task.group = GROUP
+        project.getTasksByName('compileJava', false).each { it.dependsOn(task) }
         task
     }
 

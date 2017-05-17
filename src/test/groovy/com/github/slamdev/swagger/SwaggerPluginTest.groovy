@@ -9,12 +9,14 @@ import org.gradle.api.tasks.SourceSet
 import org.gradle.testfixtures.ProjectBuilder
 import org.hamcrest.Matcher
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 import static org.hamcrest.CoreMatchers.is
 import static org.hamcrest.CoreMatchers.isA
 import static org.junit.Assert.assertThat
 
+@Ignore
 @CompileStatic
 class SwaggerPluginTest {
 
