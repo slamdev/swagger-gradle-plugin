@@ -38,6 +38,7 @@ import javax.inject.Inject
 @CompileStatic
 class SwaggerPlugin implements Plugin<Project> {
 
+    static final boolean DISABLE_CLIENT = true
     static final String GROUP = 'swagger'
     static final String API_DIRECTORY = 'rest-api'
     static final String MAIN_SOURCE_SET = 'main'
@@ -64,15 +65,18 @@ class SwaggerPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
+        SwaggerExtension extension = project.extensions.create('swagger', SwaggerExtension)
         project.plugins.apply(JavaPlugin)
-        project.plugins.apply(MavenPublishPlugin)
-        createSwaggerConfiguration(project)
         createGenerateApiTask(project)
-        createGenerateClientTask(project)
-        createCompileClientTask(project)
-        createPackageClientTask(project)
-        createPublication(project)
         configureSourceSet(project)
+        if (extension.generateClient && !DISABLE_CLIENT) {
+            project.plugins.apply(MavenPublishPlugin)
+            createSwaggerConfiguration(project)
+            createGenerateClientTask(project)
+            createCompileClientTask(project)
+            createPackageClientTask(project)
+            createPublication(project)
+        }
     }
 
     static void configureSourceSet(Project project) {

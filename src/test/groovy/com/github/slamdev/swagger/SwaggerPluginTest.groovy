@@ -28,7 +28,7 @@ class SwaggerPluginTest {
 
     @Test
     void plugin_should_add_generate_task_to_project() {
-        Task task = project.tasks.getByName('generateClient')
+        Task task = project.tasks.getByName('generateApi')
         assertThat(task, isA(GenerateTask) as Matcher)
     }
 
