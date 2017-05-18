@@ -24,7 +24,9 @@ class SwaggerPluginTest {
 
     @Before
     void setUp() {
-        project = ProjectBuilder.builder().build()
+        project = ProjectBuilder.builder()
+                .withName('test-project')
+                .build()
         project.pluginManager.apply(SwaggerPlugin)
     }
 

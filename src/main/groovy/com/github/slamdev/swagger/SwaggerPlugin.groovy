@@ -182,8 +182,7 @@ class SwaggerPlugin implements Plugin<Project> {
     }
 
     static String toClassName(String name) {
-        Collection<String> parts = name.toLowerCase().split('-').collect()
-        parts.each { it.capitalize() }.join('')
+        name.toLowerCase().split('-').collect { ((String) it).capitalize() }.join('')
     }
 
     static GenerateTask createGenerateClientTask(Project project) {
