@@ -163,7 +163,7 @@ class SwaggerPlugin implements Plugin<Project> {
         GenerateTask task = project.task([type: GenerateTask], 'generateApi') as GenerateTask
         task.source = getSpecsTree(project)
         task.destinationDir = project.file(API_OUTPUT_DIR(project))
-        task.packageName = (project.group as String ?: 'undefined') + '.' + toPackageName(project.name) + '.api'
+        task.packageName = calculatePackageName(project, false)
         task.apiNamePrefix = toClassName(project.name)
         task.client = false
         task.group = GROUP
@@ -183,7 +183,7 @@ class SwaggerPlugin implements Plugin<Project> {
         GenerateTask task = project.task([type: GenerateTask], 'generateClient') as GenerateTask
         task.source = getSpecsTree(project)
         task.destinationDir = project.file(CLIENT_OUTPUT_DIR(project))
-        task.packageName = (project.group as String ?: 'undefined') + '.' + toPackageName(project.name) + '.api.client'
+        task.packageName = calculatePackageName(project, true)
         task.apiNamePrefix = toClassName(project.name)
         task.pathVariableName = toPackageName(project.name) + '.url'
         task.client = true
@@ -200,6 +200,17 @@ class SwaggerPlugin implements Plugin<Project> {
         SourceDirectorySet resources = getMainSourceSet(p).resources
         resources.matching {
             include "${API_DIRECTORY}/**/*.yml"
+        }
+    }
+
+    static String calculatePackageName(Project p, boolean client) {
+        SwaggerExtension extension = p.extensions.getByType(SwaggerExtension)
+        if (extension.apiPackageName != null && !client) {
+            extension.apiPackageName
+        } else if (extension.clientPackageName != null && client) {
+            extension.clientPackageName
+        } else {
+            (p.group as String ?: 'undefined') + '.' + toPackageName(p.name) + '.api' + (client ? '.client' : '')
         }
     }
 }
