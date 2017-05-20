@@ -43,6 +43,7 @@ class SwaggerPlugin implements Plugin<Project> {
     static final Closure<String> API_OUTPUT_DIR = { Project p -> "${p.buildDir}/generated-sources/main" as String }
     static final Closure<String> CLIENT_OUTPUT_DIR = { Project p -> "${p.buildDir}/client-api/sources" as String }
     static final Closure<String> CLIENT_CLASSES_DIR = { Project p -> "${p.buildDir}/client-api/classes" as String }
+    static final Closure<String> CLIENT_JAR_DIR = { Project p -> "${p.buildDir}/client-api/lib" as String }
 
     private final Instantiator instantiator
     private final DependencyMetaDataProvider dependencyMetaDataProvider
@@ -149,12 +150,17 @@ class SwaggerPlugin implements Plugin<Project> {
         task
     }
 
+    @CompileDynamic
     static Jar createPackageClientTask(Project project) {
+        if (project.plugins.hasPlugin('org.springframework.boot')) {
+            project.getTasksByName('bootRepackage', false).each { it.withJarTask = 'jar' }
+        }
         Jar task = project.task([type: Jar, dependsOn: 'compileClient'], 'packageClient') as Jar
         task.from(CLIENT_CLASSES_DIR(project))
         task.baseName = "${project.name}-api-client"
         task.version = project.version as String
         task.group = GROUP
+        task.destinationDir = project.file(CLIENT_JAR_DIR(project))
         project.getTasksByName('jar', false).each { it.dependsOn(task) }
         task
     }
