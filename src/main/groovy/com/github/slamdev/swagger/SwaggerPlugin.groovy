@@ -2,13 +2,10 @@ package com.github.slamdev.swagger
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
-import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
-import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.internal.artifacts.configurations.DependencyMetaDataProvider
@@ -20,8 +17,8 @@ import org.gradle.api.publish.Publication
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.internal.ProjectDependencyPublicationResolver
 import org.gradle.api.publish.maven.MavenArtifact
-import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.internal.artifact.MavenArtifactNotationParserFactory
+import org.gradle.api.publish.maven.internal.dependencies.DefaultMavenDependency
 import org.gradle.api.publish.maven.internal.publication.DefaultMavenProjectIdentity
 import org.gradle.api.publish.maven.internal.publication.DefaultMavenPublication
 import org.gradle.api.publish.maven.internal.publisher.MavenProjectIdentity
@@ -31,6 +28,7 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.internal.typeconversion.NotationParser
+import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 
@@ -72,12 +70,13 @@ class SwaggerPlugin implements Plugin<Project> {
             createGenerateApiTask(project)
             configureSourceSet(project)
             if (extension.generateClient) {
-                project.plugins.apply(MavenPublishPlugin)
-                createSwaggerConfiguration(project)
                 createGenerateClientTask(project)
+                createProcessClientResourcesTask(project)
                 createCompileClientTask(project)
                 createPackageClientTask(project)
-                createPublication(project)
+                if (project.plugins.hasPlugin(MavenPublishPlugin)) {
+                    createPublication(project)
+                }
             }
         }
     }
@@ -92,65 +91,58 @@ class SwaggerPlugin implements Plugin<Project> {
     static Configuration createSwaggerConfiguration(Project project) {
         project.repositories.mavenCentral()
         Configuration configuration = project.configurations.maybeCreate('swagger')
-        configuration.dependencies.add(project.dependencies
-                .create('org.springframework:spring-web:4.3.8.RELEASE'))
-        configuration.dependencies.add(project.dependencies
-                .create('org.springframework.boot:spring-boot-autoconfigure:1.5.3.RELEASE'))
-        configuration.dependencies.add(project.dependencies
-                .create('com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.8.8'))
-        configuration.dependencies.add(project.dependencies
-                .create('com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.8'))
-        configuration.dependencies.add(project.dependencies
-                .create('org.projectlombok:lombok:1.16.16'))
+        List<String> dependencies = [
+                'org.springframework:spring-web:4.3.8.RELEASE',
+                'org.springframework.boot:spring-boot-autoconfigure:1.5.3.RELEASE',
+                'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.8.8',
+                'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.8',
+                'org.projectlombok:lombok:1.16.16'
+        ]
+        dependencies.collect { project.dependencies.create(it) }.each { configuration.dependencies.add(it) }
         configuration
     }
 
+    @CompileDynamic
     Publication createPublication(Project project) {
         PublishingExtension publishing = project.extensions.getByType(PublishingExtension)
-        Task artifactTask = project.getTasksByName('packageClient', false).first()
+        Jar artifactTask = project.getTasksByName('packageClient', false).first() as Jar
         Configuration configuration = project.configurations.getByName('swagger')
         MavenProjectIdentity projectIdentity = new DefaultMavenProjectIdentity(
-                (project.group as String) ?: 'unspecified',
-                "${project.name}-api-client",
-                project.version as String
+                project.group as String ?: 'unspecified',
+                artifactTask.baseName,
+                artifactTask.version
         )
         NotationParser<Object, MavenArtifact> artifactNotationParser = new MavenArtifactNotationParserFactory(
                 instantiator, fileResolver).create()
         DefaultMavenPublication publication = new DefaultMavenPublication('apiClient', projectIdentity,
                 artifactNotationParser, instantiator, projectDependencyResolver, fileCollectionFactory)
         publication.artifact(artifactTask)
-        publication.pom(generatePom(configuration.dependencies))
+        configuration.dependencies.each { Dependency d ->
+            publication.runtimeDependencies.add(new DefaultMavenDependency(d.group, d.name, null))
+        }
         publishing.publications.add(publication)
         publication
     }
 
-    @CompileDynamic
-    static Action<MavenPom> generatePom(DependencySet dependencySet) {
-        { MavenPom mavenPom ->
-            mavenPom.withXml {
-                asNode().children().last() + {
-                    resolveStrategy = DELEGATE_FIRST
-                    dependencies {
-                        dependencySet.each {
-                            Dependency d = it
-                            dependency {
-                                groupId d.group
-                                artifactId d.name
-                                version d.version
-                            }
-                        }
-                    }
-                }
-            }
-        } as Action
+    static ProcessResources createProcessClientResourcesTask(Project project) {
+        ProcessResources task = project.task(
+                [type: ProcessResources, dependsOn: 'generateClient'], 'processClientResources'
+        ) as ProcessResources
+        task.from(project.fileTree(CLIENT_OUTPUT_DIR(project)))
+        task.include('**/*.*')
+        task.exclude('**/*.java')
+        task.destinationDir = project.file(CLIENT_CLASSES_DIR(project))
+        task.group = GROUP
+        task
     }
 
     static JavaCompile createCompileClientTask(Project project) {
+        createSwaggerConfiguration(project)
         JavaCompile task = project.task(
-                [type: JavaCompile, dependsOn: 'generateClient'], 'compileClient'
+                [type: JavaCompile, dependsOn: 'processClientResources'], 'compileClient'
         ) as JavaCompile
         task.source = project.fileTree(CLIENT_OUTPUT_DIR(project))
-        task.include('**/*.*')
+        task.include('**/*.java')
         task.classpath = project.configurations.getByName('swagger').asFileTree
         task.destinationDir = project.file(CLIENT_CLASSES_DIR(project))
         task.group = GROUP
@@ -160,8 +152,10 @@ class SwaggerPlugin implements Plugin<Project> {
     static Jar createPackageClientTask(Project project) {
         Jar task = project.task([type: Jar, dependsOn: 'compileClient'], 'packageClient') as Jar
         task.from(CLIENT_CLASSES_DIR(project))
-        task.archiveName = 'api-client.jar'
+        task.baseName = "${project.name}-api-client"
+        task.version = project.version as String
         task.group = GROUP
+        project.getTasksByName('jar', false).each { it.dependsOn(task) }
         task
     }
 
