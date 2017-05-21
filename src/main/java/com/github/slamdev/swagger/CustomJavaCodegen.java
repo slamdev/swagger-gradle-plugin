@@ -3,6 +3,7 @@ package com.github.slamdev.swagger;
 import io.swagger.codegen.*;
 import io.swagger.codegen.languages.AbstractJavaCodegen;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,11 @@ public class CustomJavaCodegen extends AbstractJavaCodegen {
             return postProcessServerOperations(objs);
         }
         return objs;
+    }
+
+    @Override
+    public String toEnumName(CodegenProperty property) {
+        return StringUtils.capitalize(property.name);
     }
 
     @SuppressWarnings("unchecked")

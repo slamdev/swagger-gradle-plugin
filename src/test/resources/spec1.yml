@@ -37,6 +37,13 @@ definitions:
       companyUUID:
         type: string
         format: uuid
+      eventType:
+        type: string
+        description: Event Type
+        enum:
+          - A
+          - B
+          - C
   Name:
     type: string
     enum:
