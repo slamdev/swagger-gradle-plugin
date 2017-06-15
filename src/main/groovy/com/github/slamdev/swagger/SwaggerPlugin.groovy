@@ -75,6 +75,7 @@ class SwaggerPlugin implements Plugin<Project> {
                 createProcessClientResourcesTask(project)
                 createCompileClientTask(project)
                 createPackageClientTask(project)
+                createClientApiConfiguration(project)
                 if (project.plugins.hasPlugin(MavenPublishPlugin)) {
                     createPublication(project)
                 }
@@ -93,13 +94,21 @@ class SwaggerPlugin implements Plugin<Project> {
         project.repositories.mavenCentral()
         Configuration configuration = project.configurations.maybeCreate('swagger')
         List<String> dependencies = [
-                'org.springframework:spring-web:4.3.8.RELEASE',
-                'org.springframework.boot:spring-boot-autoconfigure:1.5.3.RELEASE',
-                'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.8.8',
-                'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.8',
-                'org.projectlombok:lombok:1.16.16'
+                'org.springframework:spring-web',
+                'org.springframework.boot:spring-boot-autoconfigure',
+                'com.fasterxml.jackson.datatype:jackson-datatype-jdk8',
+                'com.fasterxml.jackson.datatype:jackson-datatype-jsr310',
+                'org.projectlombok:lombok'
         ]
         dependencies.collect { project.dependencies.create(it) }.each { configuration.dependencies.add(it) }
+        configuration
+    }
+
+    static Configuration createClientApiConfiguration(Project project) {
+        Jar artifactTask = project.getTasksByName('packageClient', false).first() as Jar
+        Configuration configuration = project.configurations.maybeCreate('clientApi')
+        project.artifacts.add('clientApi', artifactTask)
+        configuration.extendsFrom(project.configurations.getByName('swagger'))
         configuration
     }
 
@@ -161,7 +170,6 @@ class SwaggerPlugin implements Plugin<Project> {
         task.version = project.version as String
         task.group = GROUP
         task.destinationDir = project.file(CLIENT_JAR_DIR(project))
-        project.getTasksByName('jar', false).each { it.dependsOn(task) }
         task
     }
 
@@ -178,11 +186,11 @@ class SwaggerPlugin implements Plugin<Project> {
     }
 
     static String toPackageName(String name) {
-        name.toLowerCase().replaceAll('-', '.')
+        name.toLowerCase().split('/').last().replaceAll('-', '.')
     }
 
     static String toClassName(String name) {
-        name.toLowerCase().split('-').collect { ((String) it).capitalize() }.join('')
+        name.toLowerCase().split('/').last().split('-').collect { ((String) it).capitalize() }.join('')
     }
 
     static GenerateTask createGenerateClientTask(Project project) {
