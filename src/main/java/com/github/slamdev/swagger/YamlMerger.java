@@ -1,76 +1,85 @@
 package com.github.slamdev.swagger;
 
-import org.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.stream.Collector;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.reducing;
 
 public class YamlMerger {
 
-    private static final Yaml YAML = new Yaml();
-
-    public File merge(List<File> files, File outputDirectory) {
+    public File merge(List<File> specs, File outputDirectory) {
+        List<File> files = new ArrayList<>(specs);
         if (files.isEmpty()) {
             throw new IllegalArgumentException("Files should not be empty");
         }
         if (files.size() == 1) {
             return files.get(0);
         }
-        Collector<Map, ?, Map> reducer = reducing(new HashMap(), this::deepMerge);
-        return files.stream().map(this::toString).map(YAML::load).map(Map.class::cast)
-                .collect(collectingAndThen(collectingAndThen(reducer, YAML::dump), map -> toFile(map, outputDirectory)));
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map deepMerge(Map map1, Map map2) {
-        Set<Entry> entries = map2.entrySet();
-        for (Entry entry : entries) {
-            Object value2 = entry.getValue();
-            if (map1.containsKey(entry.getKey())) {
-                Object value1 = map1.get(entry.getKey());
-                if (value1 instanceof Map && value2 instanceof Map) {
-                    deepMerge((Map) value1, (Map) value2);
-                } else if (value1 instanceof List && value2 instanceof List) {
-                    map1.put(entry.getKey(), merge((List) value1, (List) value2));
-                } else {
-                    map1.put(entry.getKey(), value2);
-                }
-            } else {
-                map1.put(entry.getKey(), value2);
-            }
+        YamlMapper mapper = new YamlMapper();
+        JsonNode all = mapper.read(files.remove(0));
+        for (File file : files) {
+            all = merge(all, mapper.read(file));
         }
-        return map1;
-    }
-
-    @SuppressWarnings("unchecked")
-    private List merge(List list1, List list2) {
-        list2.removeAll(list1);
-        list1.addAll(list2);
-        return list1;
-    }
-
-    private String toString(File file) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            return new String(Files.readAllBytes(Paths.get(file.getPath())), UTF_8);
+            mapper.write(new YAMLFactory().createGenerator(baos), all);
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
+        return toFile(baos.toString(), outputDirectory);
     }
+
+    private JsonNode merge(JsonNode mainNode, JsonNode updateNode) {
+        Iterator<String> fieldNames = updateNode.fieldNames();
+        while (fieldNames.hasNext()) {
+            String updatedFieldName = fieldNames.next();
+            JsonNode valueToBeUpdated = mainNode.get(updatedFieldName);
+            JsonNode updatedValue = updateNode.get(updatedFieldName);
+            if (valueToBeUpdated != null && valueToBeUpdated.isArray() && updatedValue.isArray()) {
+                ArrayNode updatedArrayNode = (ArrayNode) updatedValue;
+                ArrayNode arrayNodeToBeUpdated = (ArrayNode) valueToBeUpdated;
+                for (int i = 0; updatedArrayNode.has(i); ++i) {
+                    if (arrayNodeToBeUpdated.has(i)) {
+                        JsonNode mergedNode = merge(arrayNodeToBeUpdated.get(i), updatedArrayNode.get(i));
+                        arrayNodeToBeUpdated.set(i, mergedNode);
+                    } else {
+                        arrayNodeToBeUpdated.add(updatedArrayNode.get(i));
+                    }
+                }
+                // if the Node is an @ObjectNode
+            } else if (valueToBeUpdated != null && updatedValue != null && valueToBeUpdated.isObject() && !updatedValue.isNull()) {
+                merge(valueToBeUpdated, updatedValue);
+            } else {
+                if (updatedValue == null || updatedValue.isNull()) {
+                    ((ObjectNode) mainNode).remove(updatedFieldName);
+                } else {
+                    ((ObjectNode) mainNode).replace(updatedFieldName, updatedValue);
+                }
+            }
+        }
+        if (updateNode instanceof TextNode) {
+            return updateNode;
+        }
+        return mainNode;
+    }
+
 
     private File toFile(String content, File outputDirectory) {
         Path file = Paths.get(outputDirectory.getPath(), "merged.yml");
@@ -80,5 +89,26 @@ public class YamlMerger {
             throw new IllegalArgumentException(e);
         }
         return file.toFile();
+    }
+
+    private static class YamlMapper {
+
+        private static final ObjectMapper MAPPER = new ObjectMapper(new YAMLFactory());
+
+        JsonNode read(File file) {
+            try {
+                return MAPPER.readTree(file);
+            } catch (IOException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+
+        void write(YAMLGenerator generator, JsonNode merged) {
+            try {
+                MAPPER.writeTree(generator, merged);
+            } catch (IOException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
     }
 }

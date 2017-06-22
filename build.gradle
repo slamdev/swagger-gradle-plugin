@@ -25,6 +25,8 @@ dependencies {
     compile('io.swagger:swagger-codegen:2.2.2') {
         exclude module: 'slf4j-simple'
     }
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.0.pr4'
+    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.0.pr4'
     testCompile 'junit:junit:4.12'
 }
 

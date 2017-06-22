@@ -20,6 +20,7 @@ public class SwaggerGeneratorTest {
         File spec3 = new File("src/test/resources", "spec3.yml");
         File outputDir = new File("build/output");
         FileUtils.deleteDirectory(outputDir);
+        outputDir.mkdirs();
         GENERATOR.generate(asList(spec1, spec2, spec3), outputDir, "com.test", "super", "foo", true);
     }
 }
