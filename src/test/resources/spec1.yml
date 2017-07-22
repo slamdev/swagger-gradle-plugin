@@ -21,6 +21,21 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Value'
+  /upload:
+    post:
+      operationId: upload
+      parameters:
+        - name: json
+          in: formData
+          type: string
+          required: true
+        - name: file
+          in: formData
+          type: file
+          required: true
+      responses:
+        200:
+          description: OK
 definitions:
   Value:
     type: object
