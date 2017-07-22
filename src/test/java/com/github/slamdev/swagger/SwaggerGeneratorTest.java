@@ -21,6 +21,6 @@ public class SwaggerGeneratorTest {
         File outputDir = new File("build/output");
         FileUtils.deleteDirectory(outputDir);
         outputDir.mkdirs();
-        GENERATOR.generate(asList(spec1, spec2, spec3), outputDir, "com.test", "super", "foo", true);
+        GENERATOR.generate(asList(spec1, spec2, spec3), outputDir, "com.test", "super", "foo", false);
     }
 }

@@ -41,7 +41,7 @@ public interface {{classname}} {
         {{/hasReference}}
     }
 
-    {{#hasReference}}{{>returnTypes}} {{/hasReference}}{{^hasReference}}void {{/hasReference}}{{operationId}}({{#allParams}}{{#notFile}}{{{dataType}}} {{paramName}}{{/notFile}}{{#isFile}} MultipartFile {{baseName}}{{/isFile}}{{#hasMore}},{{/hasMore}}{{/allParams}});
+    {{#hasReference}}{{>returnTypes}} {{/hasReference}}{{^hasReference}}void {{/hasReference}}{{operationId}}({{#allParams}}{{#isFile}} MultipartFile {{baseName}}{{/isFile}}{{^isFile}}{{{dataType}}} {{paramName}}{{/isFile}}{{#hasMore}},{{/hasMore}}{{/allParams}});
 {{/operation}}
 {{/operations}}
 
