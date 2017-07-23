@@ -36,6 +36,16 @@ paths:
       responses:
         200:
           description: OK
+  /download:
+    get:
+      operationId: download
+      produces:
+        - 'application/octet-stream'
+      responses:
+        200:
+          description: OK
+          schema:
+            type: file
 definitions:
   Value:
     type: object

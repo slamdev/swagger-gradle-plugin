@@ -9,6 +9,7 @@ import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.core.io.Resource;
 import java.util.*;
 import java.net.URI;
 
@@ -40,7 +41,7 @@ public class {{classname}} {
   {{/allParams}}   * @return {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}}
      */
     public ResponseEntity<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}> {{nickname}}Response(
-        {{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}
+        {{#allParams}}{{#isFile}} Resource {{baseName}}{{/isFile}}{{^isFile}}{{{dataType}}} {{paramName}}{{/isFile}}{{#hasMore}}, {{/hasMore}}{{/allParams}}
     ) {
         String _url = "{{{path}}}{{#hasQueryParams}}?{{/hasQueryParams}}{{#queryParams}}{{baseName}}={{=<% %>=}}{<%paramName%>}<%={{ }}=%>{{#hasMore}}&{{/hasMore}}{{/queryParams}}";
         HttpMethod _method = HttpMethod.{{httpMethod}};
@@ -79,7 +80,7 @@ public class {{classname}} {
   {{/allParams}}   * @return {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}}
      */
     public {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}} {{nickname}}(
-        {{#allParams}}{{{dataType}}} {{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}}
+        {{#allParams}}{{#isFile}} Resource {{baseName}}{{/isFile}}{{^isFile}}{{{dataType}}} {{paramName}}{{/isFile}}{{#hasMore}}, {{/hasMore}}{{/allParams}}
     ) {
         ResponseEntity<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}> response = {{nickname}}Response({{#allParams}}{{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}});
         {{#returnType}}return response.getBody();{{/returnType}}

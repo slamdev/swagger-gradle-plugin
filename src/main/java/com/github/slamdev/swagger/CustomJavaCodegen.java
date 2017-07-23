@@ -39,7 +39,9 @@ public class CustomJavaCodegen extends AbstractJavaCodegen {
         apiDocTemplateFiles.remove("api_doc.mustache");
         apiTestTemplateFiles.clear();
         typeMapping.put("DateTime", "Instant");
+        typeMapping.put("File", "Resource");
         importMapping.put("Instant", "java.time.Instant");
+        importMapping.put("Resource", "org.springframework.core.io.Resource");
         supportingFiles.add(new SupportingFile("lombok.config", "", "lombok.config"));
         if ("client".equals(library)) {
             supportingFiles.add(new SupportingFile("ApiConfiguration.mustache", invokerFolder, "ApiConfiguration.java"));
