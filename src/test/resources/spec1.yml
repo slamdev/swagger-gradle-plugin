@@ -54,6 +54,7 @@ definitions:
         $ref: '#/definitions/Name'
       value:
         type: string
+        example: John
       daate:
         type: string
         format: date-time
@@ -74,3 +75,24 @@ definitions:
     enum:
       - FIRS
       - LAST
+  Error:
+    type: object
+    description: Sample error object strucutre. Should not be used on backend directly
+    properties:
+      timestamp:
+        type: integer
+        format: int64
+        example: 1501620716117
+      status:
+        type: integer
+        format: int32
+        example: 500
+      error:
+        type: string
+        example: Internal Server Error
+      message:
+        type: string
+        example: Request processing failed; nested exception is java.lang.NullPointerException
+      path:
+        type: string
+        example: /api/position/NEW1

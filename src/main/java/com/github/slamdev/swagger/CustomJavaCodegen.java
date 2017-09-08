@@ -2,6 +2,7 @@ package com.github.slamdev.swagger;
 
 import io.swagger.codegen.*;
 import io.swagger.codegen.languages.AbstractJavaCodegen;
+import io.swagger.models.Model;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -63,6 +64,13 @@ public class CustomJavaCodegen extends AbstractJavaCodegen {
         }
         model.imports.remove("ApiModelProperty");
         model.imports.remove("ApiModel");
+    }
+
+    @Override
+    public CodegenModel fromModel(String name, Model model, Map<String, Model> allDefinitions) {
+        CodegenModel codegenModel = super.fromModel(name, model, allDefinitions);
+        codegenModel.imports.remove("ApiModel");
+        return codegenModel;
     }
 
     public String toApiName(String name) {

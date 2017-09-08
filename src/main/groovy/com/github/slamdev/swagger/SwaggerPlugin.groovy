@@ -65,11 +65,16 @@ class SwaggerPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         SwaggerExtension extension = project.extensions.create('swagger', SwaggerExtension)
+        if (!extension.generateClient && !extension.generateApi) {
+            return
+        }
         project.plugins.apply(JavaPlugin)
         project.plugins.apply(IdeaPlugin)
         project.afterEvaluate {
-            createGenerateApiTask(project)
-            configureSourceSet(project)
+            if (extension.generateApi) {
+                createGenerateApiTask(project)
+                configureSourceSet(project)
+            }
             if (extension.generateClient) {
                 createGenerateClientTask(project)
                 createProcessClientResourcesTask(project)
@@ -94,11 +99,11 @@ class SwaggerPlugin implements Plugin<Project> {
         project.repositories.mavenCentral()
         Configuration configuration = project.configurations.maybeCreate('swagger')
         List<String> dependencies = [
-                'org.springframework:spring-web',
-                'org.springframework.boot:spring-boot-autoconfigure',
-                'com.fasterxml.jackson.datatype:jackson-datatype-jdk8',
-                'com.fasterxml.jackson.datatype:jackson-datatype-jsr310',
-                'org.projectlombok:lombok'
+                'org.springframework:spring-web:4.3.10.RELEASE',
+                'org.springframework.boot:spring-boot-autoconfigure:1.5.6.RELEASE',
+                'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.8.9',
+                'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.9',
+                'org.projectlombok:lombok:1.16.18'
         ]
         dependencies.collect { project.dependencies.create(it) }.each { configuration.dependencies.add(it) }
         configuration
