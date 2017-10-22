@@ -3,6 +3,7 @@ package {{invokerPackage}};
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -12,6 +13,7 @@ import java.util.Collections;
 
 import static java.util.stream.Collectors.toList;
 
+@Configuration
 class ApiConfiguration {
 
     private static final String BASE_PATH = "{{basePathWithoutHost}}";

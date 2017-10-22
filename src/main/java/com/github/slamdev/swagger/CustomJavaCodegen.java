@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class CustomJavaCodegen extends AbstractJavaCodegen {
 
@@ -34,7 +35,18 @@ public class CustomJavaCodegen extends AbstractJavaCodegen {
 
     @Override
     public void processOpts() {
+        String packageName = (String) Objects.requireNonNull(vendorExtensions.get("x-package-name"));
+        invokerPackage = packageName;
+        apiPackage = packageName;
+        modelPackage = packageName;
+
         super.processOpts();
+
+        String pathVariableName = (String) Objects.requireNonNull(vendorExtensions.get("x-path-variable-name"));
+        additionalProperties.put("pathVariableName", pathVariableName);
+        String apiNamePrefix = (String) Objects.requireNonNull(vendorExtensions.get("x-api-name-prefix"));
+        additionalProperties.put("apiNamePrefix", apiNamePrefix);
+
         String invokerFolder = (sourceFolder + '/' + invokerPackage).replace(".", "/");
         modelDocTemplateFiles.remove("model_doc.mustache");
         apiDocTemplateFiles.remove("api_doc.mustache");
