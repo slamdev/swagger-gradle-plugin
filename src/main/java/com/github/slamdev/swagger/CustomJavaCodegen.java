@@ -46,6 +46,7 @@ public class CustomJavaCodegen extends AbstractJavaCodegen {
         additionalProperties.put("pathVariableName", pathVariableName);
         String apiNamePrefix = (String) Objects.requireNonNull(vendorExtensions.get("x-api-name-prefix"));
         additionalProperties.put("apiNamePrefix", apiNamePrefix);
+        additionalProperties.put("interceptorQualifier", apiNamePrefix);
 
         String invokerFolder = (sourceFolder + '/' + invokerPackage).replace(".", "/");
         modelDocTemplateFiles.remove("model_doc.mustache");

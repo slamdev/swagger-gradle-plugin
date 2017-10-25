@@ -20,7 +20,8 @@ repositories {
 }
 
 dependencies {
-    compile('io.swagger:swagger-codegen:2.2.3') {
+    // https://github.com/swagger-api/swagger-codegen/issues/6759 needs to be fixed before update
+    compile('io.swagger:swagger-codegen:2.2.2') {
         exclude module: 'slf4j-simple'
     }
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.2'

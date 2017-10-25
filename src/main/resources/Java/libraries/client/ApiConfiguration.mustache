@@ -7,27 +7,36 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.beans.factory.annotation.BeanFactoryAnnotationUtils;
+import org.springframework.beans.factory.ListableBeanFactory;
 import java.util.List;
 import java.util.Optional;
 import java.util.Collections;
+import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
 
 @Configuration
 class ApiConfiguration {
 
-    private static final String BASE_PATH = "{{basePathWithoutHost}}";
+    private static final String REST_API_QUALIFIER = "rest-api";
 
-    private final String url;
+    private static final String MODULE_SPECIFIC_QUALIFIER = "{{interceptorQualifier}}";
+
+    private static final String BASE_PATH = "{{basePathWithoutHost}}";
 
     private final RestTemplate restTemplate;
 
     @Autowired
-    public ApiConfiguration(RestTemplateBuilder restTemplateBuilder, Optional<List<ClientHttpRequestInterceptor>> interceptors, {{=<% %>=}}@Value("${<%pathVariableName%>}")<%={{ }}=%> String url) {
+    public ApiConfiguration(RestTemplateBuilder restTemplateBuilder, ListableBeanFactory factory, {{=<% %>=}}@Value("${<%pathVariableName%>}")<%={{ }}=%> String url) {
+        Map<String, ClientHttpRequestInterceptor> beans = factory.getBeansOfType(ClientHttpRequestInterceptor.class);
+        List<ClientHttpRequestInterceptor> interceptors = beans.entrySet().stream()
+            .filter(e -> BeanFactoryAnnotationUtils.isQualifierMatch(s -> REST_API_QUALIFIER.equals(s) || MODULE_SPECIFIC_QUALIFIER.equals(s), e.getKey(), factory))
+            .map(Map.Entry::getValue)
+            .collect(toList());
         restTemplate = restTemplateBuilder.rootUri(strip(url) + "/" + strip(BASE_PATH))
-           .additionalInterceptors(interceptors.orElse(Collections.emptyList()).stream().filter(e -> !e.getClass().getSimpleName().equals("LoadBalancerInterceptor")).collect(toList()))
+           .additionalInterceptors(interceptors)
            .build();
-        this.url = url;
     }
 {{#apiInfo}}{{#apis}}
     @Bean
