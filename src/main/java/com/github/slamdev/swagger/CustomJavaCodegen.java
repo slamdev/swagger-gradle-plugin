@@ -59,6 +59,7 @@ public class CustomJavaCodegen extends AbstractJavaCodegen {
         supportingFiles.add(new SupportingFile("lombok.config", "", "lombok.config"));
         if ("client".equals(library)) {
             supportingFiles.add(new SupportingFile("ApiConfiguration.mustache", invokerFolder, "ApiConfiguration.java"));
+            supportingFiles.add(new SupportingFile("RestTemplateCustomizerStorage.mustache", invokerFolder, "RestTemplateCustomizerStorage.java"));
             supportingFiles.add(new SupportingFile("spring.factories.mustache", "META-INF", "spring.factories"));
         }
     }

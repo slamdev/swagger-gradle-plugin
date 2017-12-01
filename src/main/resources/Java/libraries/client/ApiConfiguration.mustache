@@ -1,6 +1,7 @@
 package {{invokerPackage}};
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,13 +29,16 @@ class ApiConfiguration {
     private final RestTemplate restTemplate;
 
     @Autowired
-    public ApiConfiguration(RestTemplateBuilder restTemplateBuilder, ListableBeanFactory factory, {{=<% %>=}}@Value("${<%pathVariableName%>}")<%={{ }}=%> String url) {
+    public ApiConfiguration(RestTemplateBuilder restTemplateBuilder, ListableBeanFactory factory,
+                            {{=<% %>=}}@Value("${<%pathVariableName%>}")<%={{ }}=%> String url,
+                            @Qualifier(MODULE_SPECIFIC_QUALIFIER) Optional<RestTemplateCustomizerStorage> restTemplateCustomizerStorage) {
         Map<String, ClientHttpRequestInterceptor> beans = factory.getBeansOfType(ClientHttpRequestInterceptor.class);
         List<ClientHttpRequestInterceptor> interceptors = beans.entrySet().stream()
             .filter(e -> BeanFactoryAnnotationUtils.isQualifierMatch(s -> REST_API_QUALIFIER.equals(s) || MODULE_SPECIFIC_QUALIFIER.equals(s), e.getKey(), factory))
             .map(Map.Entry::getValue)
             .collect(toList());
         restTemplate = restTemplateBuilder.rootUri(strip(url) + "/" + strip(BASE_PATH))
+           .additionalCustomizers(restTemplateCustomizerStorage.map(RestTemplateCustomizerStorage::getRestTemplateCustomizers).orElse(Collections.emptyList()))
            .additionalInterceptors(interceptors)
            .build();
     }

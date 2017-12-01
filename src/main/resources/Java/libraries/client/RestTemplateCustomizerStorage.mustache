@@ -1,0 +1,11 @@
+package {{invokerPackage}};
+
+import lombok.Value;
+import org.springframework.boot.web.client.RestTemplateCustomizer;
+
+import java.util.List;
+
+@Value
+public class RestTemplateCustomizerStorage {
+    List<RestTemplateCustomizer> restTemplateCustomizers;
+}
