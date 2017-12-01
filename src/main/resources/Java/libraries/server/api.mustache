@@ -31,7 +31,8 @@ public interface {{classname}} {
         produces = { {{#produces}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/produces}} }, {{/hasProduces}}{{#hasConsumes}}
         consumes = { {{#consumes}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/consumes}} },{{/hasConsumes}}{{/singleContentTypes}}
         method = RequestMethod.{{httpMethod}}
-    )
+    ){{#vendorExtensions.x-security-role}}
+    @org.springframework.security.access.annotation.Secured("{{vendorExtensions.x-security-role}}"){{/vendorExtensions.x-security-role}}
     default ResponseEntity<{{>returnTypes}}> {{operationId}}Api({{#allParams}}{{>queryParams}}{{>pathParams}}{{>headerParams}}{{>bodyParams}}{{>formParams}}{{#hasMore}},{{/hasMore}}{{/allParams}}) {
         {{#hasReference}}
         return toResponse({{operationId}}({{#allParams}}{{paramName}}{{#hasMore}},{{/hasMore}}{{/allParams}}));

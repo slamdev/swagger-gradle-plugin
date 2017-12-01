@@ -23,6 +23,7 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Value3'
+      x-security-role: USER
 definitions:
   Value3:
     type: object
