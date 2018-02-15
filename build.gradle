@@ -2,7 +2,7 @@ plugins {
     id 'java-gradle-plugin'
     id 'groovy'
     id 'idea'
-    id 'com.gradle.plugin-publish' version '0.9.9'
+    id 'com.gradle.plugin-publish' version '0.9.10'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -24,8 +24,8 @@ dependencies {
     compile('io.swagger:swagger-codegen:2.2.2') {
         exclude module: 'slf4j-simple'
     }
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.2'
-    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.2'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.4'
+    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.4'
     testCompile 'junit:junit:4.12'
 }
 
