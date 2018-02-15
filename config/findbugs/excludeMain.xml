@@ -49,6 +49,7 @@
             <Bug code="SnVI"/>
             <Bug code="PCOA"/>
             <Bug code="MS"/>
+            <Bug code="NPMC"/>
         </Or>
     </Match>
 </FindBugsFilter>

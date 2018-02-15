@@ -16,6 +16,8 @@ import org.gradle.internal.logging.progress.ProgressLoggerFactory
 import org.gradle.internal.progress.PercentageProgressFormatter
 
 import javax.inject.Inject
+import java.nio.file.Files
+import java.nio.file.Path
 
 @CompileStatic
 class SwaggerPlugin implements Plugin<Project> {
@@ -30,7 +32,7 @@ class SwaggerPlugin implements Plugin<Project> {
     @SuppressWarnings('GroovyAssignabilityCheck')
     private static void createGenerateTask(Project project) {
         Task task = project.tasks.create('swagger', SwaggerTask) { SwaggerTask task ->
-            task.destinationDir = project.file("${project.buildDir}/generated-sources/main")
+            task.destinationDir = project.file("${project.buildDir}/swagger-generated-sources/temp")
         }
         project.tasks.withType(JavaCompile) { Task compileTask ->
             compileTask.dependsOn(task)
@@ -40,8 +42,8 @@ class SwaggerPlugin implements Plugin<Project> {
     private static void createGeneratedSourceSet(Project project) {
         SourceSetContainer sourceSets = project.convention.getPlugin(JavaPluginConvention).sourceSets
         SourceSet sourceSet = sourceSets.getByName('main')
-        sourceSet.java.srcDir("${project.buildDir}/generated-sources/main")
-        sourceSet.resources.srcDir("${project.buildDir}/generated-sources/main")
+        sourceSet.java.srcDir("${project.buildDir}/swagger-generated-sources/main/java")
+        sourceSet.resources.srcDir("${project.buildDir}/swagger-generated-sources/main/resources")
     }
 
     @SuppressWarnings('GroovyUnusedDeclaration')
@@ -117,7 +119,7 @@ class SwaggerPlugin implements Plugin<Project> {
                 PercentageProgressFormatter progressFormatter = new PercentageProgressFormatter('Generating',
                         specs.size() + 2)
                 progressLogger.progress(progressFormatter.incrementAndGetProgress())
-                destinationDir.deleteDir()
+                destinationDir.parentFile.deleteDir()
                 progressLogger.progress(progressFormatter.incrementAndGetProgress())
                 destinationDir.mkdirs()
                 servers.each { files ->
@@ -130,8 +132,29 @@ class SwaggerPlugin implements Plugin<Project> {
                     new SwaggerGenerator().generate(files, destinationDir, 'client')
                     progressFormatter.increment()
                 }
+                FileTree javaTree = project
+                        .fileTree(destinationDir)
+                        .include('**/*.java') as FileTree
+                move(javaTree, 'java')
+                FileTree resourcesTree = project
+                        .fileTree(destinationDir)
+                        .exclude('**/*.java') as FileTree
+                move(resourcesTree, 'resources')
+                destinationDir.deleteDir()
             } finally {
                 progressLogger.completed()
+            }
+        }
+
+        private void move(FileTree tree, String dir) {
+            Path newDir = destinationDir.parentFile.toPath().resolve('main').resolve(dir)
+            for (File file : tree.files) {
+                Path fileName = destinationDir.toPath().relativize(file.toPath())
+                Path newFile = newDir.resolve(fileName)
+                if (!Files.exists(newFile.parent)) {
+                    Files.createDirectories(newFile.parent)
+                }
+                Files.move(file.toPath(), newFile)
             }
         }
     }
