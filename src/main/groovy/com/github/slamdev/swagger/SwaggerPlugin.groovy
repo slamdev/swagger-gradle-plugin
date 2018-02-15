@@ -32,7 +32,7 @@ class SwaggerPlugin implements Plugin<Project> {
     @SuppressWarnings('GroovyAssignabilityCheck')
     private static void createGenerateTask(Project project) {
         Task task = project.tasks.create('swagger', SwaggerTask) { SwaggerTask task ->
-            task.destinationDir = project.file("${project.buildDir}/swagger-generated-sources/temp")
+            task.destinationDir = project.file("${project.buildDir}/swagger-generated-sources")
         }
         project.tasks.withType(JavaCompile) { Task compileTask ->
             compileTask.dependsOn(task)
@@ -119,37 +119,41 @@ class SwaggerPlugin implements Plugin<Project> {
                 PercentageProgressFormatter progressFormatter = new PercentageProgressFormatter('Generating',
                         specs.size() + 2)
                 progressLogger.progress(progressFormatter.incrementAndGetProgress())
-                destinationDir.parentFile.deleteDir()
+                destinationDir.deleteDir()
                 progressLogger.progress(progressFormatter.incrementAndGetProgress())
-                destinationDir.mkdirs()
+
+                File tempDir = new File(destinationDir, 'temp')
+
+                tempDir.mkdirs()
                 servers.each { files ->
                     progressLogger.progress(progressFormatter.progress)
-                    new SwaggerGenerator().generate(files, destinationDir, 'server')
+                    new SwaggerGenerator().generate(files, tempDir, 'server')
                     progressFormatter.increment()
                 }
                 clients.each { files ->
                     progressLogger.progress(progressFormatter.progress)
-                    new SwaggerGenerator().generate(files, destinationDir, 'client')
+                    new SwaggerGenerator().generate(files, tempDir, 'client')
                     progressFormatter.increment()
                 }
                 FileTree javaTree = project
-                        .fileTree(destinationDir)
+                        .fileTree(tempDir)
                         .include('**/*.java') as FileTree
                 move(javaTree, 'java')
                 FileTree resourcesTree = project
-                        .fileTree(destinationDir)
+                        .fileTree(tempDir)
                         .exclude('**/*.java') as FileTree
                 move(resourcesTree, 'resources')
-                destinationDir.deleteDir()
+                tempDir.deleteDir()
             } finally {
                 progressLogger.completed()
             }
         }
 
         private void move(FileTree tree, String dir) {
-            Path newDir = destinationDir.parentFile.toPath().resolve('main').resolve(dir)
+            File tempDir = new File(destinationDir, 'temp')
+            Path newDir = destinationDir.toPath().resolve('main').resolve(dir)
             for (File file : tree.files) {
-                Path fileName = destinationDir.toPath().relativize(file.toPath())
+                Path fileName = tempDir.toPath().relativize(file.toPath())
                 Path newFile = newDir.resolve(fileName)
                 if (!Files.exists(newFile.parent)) {
                     Files.createDirectories(newFile.parent)
