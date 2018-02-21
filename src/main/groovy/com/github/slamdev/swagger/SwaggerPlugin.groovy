@@ -46,6 +46,7 @@ class SwaggerPlugin implements Plugin<Project> {
         sourceSet.resources.srcDir("${project.buildDir}/swagger-generated-sources/main/resources")
     }
 
+    @CacheableTask
     @SuppressWarnings('GroovyUnusedDeclaration')
     static class SwaggerTask extends DefaultTask {
 
@@ -53,6 +54,7 @@ class SwaggerPlugin implements Plugin<Project> {
 
         private final List<List<File>> servers = []
 
+        @PathSensitive(PathSensitivity.RELATIVE)
         @OutputDirectory
         File destinationDir
 
@@ -106,6 +108,7 @@ class SwaggerPlugin implements Plugin<Project> {
         @SuppressWarnings('GroovyUnusedDeclaration')
         @SkipWhenEmpty
         @InputFiles
+        @PathSensitive(PathSensitivity.RELATIVE)
         protected List getSpecs() {
             clients*.flatten() + servers*.flatten()
         }
