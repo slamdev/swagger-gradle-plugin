@@ -26,8 +26,14 @@ public class {{classname}} {
         URI uri = restTemplate.getUriTemplateHandler().expand(url, uriVariables);
         UriComponentsBuilder builder = UriComponentsBuilder.fromUri(uri);
         uriVariables.forEach((name, value) -> {
-            if (value == null || (value instanceof Collection && ((Collection) value).isEmpty())) {
+            if (value == null) {
                 builder.replaceQueryParam(name);
+            } else if (value instanceof Collection) {
+                Collection collection = (Collection) value;
+                builder.replaceQueryParam(name);
+                if (!collection.isEmpty()) {
+                    builder.queryParam(name, collection.toArray());
+                }
             }
         });
         return builder.build(true).toUri();
