@@ -54,6 +54,9 @@ public class {{classname}} {
         HttpHeaders _headers = new HttpHeaders();
         _headers.setContentType(MediaType.parseMediaType("{{vendorExtensions.x-contentType}}"));
         _headers.setAccept(Collections.singletonList(MediaType.parseMediaType("{{vendorExtensions.x-accepts}}")));
+        {{#headerParams}}
+        _headers.set("{{paramName}}", {{paramName}}.toString());
+        {{/headerParams}}
         Object _body = null;
         {{#bodyParam}}
         _body = {{paramName}};

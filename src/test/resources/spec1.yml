@@ -17,6 +17,11 @@ paths:
           required: true
           type: integer
           format: int64
+        - name: someHeader
+          in: header
+          required: false
+          type: integer
+          format: int64
       responses:
         200:
           description: OK
