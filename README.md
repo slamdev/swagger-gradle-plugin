@@ -12,9 +12,6 @@ chance that you forgot to modify one of them.
 
 The AIM of this plugin is to solve this issue and to generate some boilerplate for you communication layer.
 
-Look into the [sample project repository](https://github.com/slamdev/swagger-gradle-plugin-sample) that shows how the 
-generated code looks like and how to use it.
-
 ## Usage
 
 First step is to add the plugin to your project as described [here](https://plugins.gradle.org/plugin/com.github.slamdev.swagger).
