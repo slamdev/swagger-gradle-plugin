@@ -120,6 +120,9 @@ public class CustomJavaCodegen extends AbstractJavaCodegen {
         if (operations != null) {
             List<CodegenOperation> ops = operations.get("operation");
             for (CodegenOperation operation : ops) {
+                if (vendorExtensions.containsKey("x-security-role")) {
+                    operation.vendorExtensions.putIfAbsent("x-security-role", vendorExtensions.get("x-security-role"));
+                }
                 List<CodegenResponse> responses = operation.responses;
                 if (responses != null) {
                     for (CodegenResponse end : responses) {

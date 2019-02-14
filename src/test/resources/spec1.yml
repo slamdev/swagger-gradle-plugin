@@ -6,10 +6,12 @@ info:
 x-package-name: com.github.slamdev.api
 x-api-name-prefix: SuperAnimals
 x-path-variable-name: ws.super.animals.url
+x-security-role: USER
 basePath: /api
 paths:
   /traits/{id}:
     get:
+      x-security-role: ADMIN
       operationId: getValues
       parameters:
         - name: id
