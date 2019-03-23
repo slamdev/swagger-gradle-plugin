@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Map;
 {{/fullJavaUtil}}
 
-import static org.springframework.http.HttpStatus.OK;
-
 {{>generatedAnnotation}}
 @RestController
 @RequestMapping
@@ -35,11 +33,11 @@ public interface {{classname}} {
     @org.springframework.security.access.annotation.Secured("{{vendorExtensions.x-security-role}}"){{/vendorExtensions.x-security-role}}
     default ResponseEntity<{{>returnTypes}}> {{operationId}}Api({{#allParams}}{{>queryParams}}{{>pathParams}}{{>headerParams}}{{>bodyParams}}{{>formParams}}{{#hasMore}},{{/hasMore}}{{/allParams}}) {
         {{#hasReference}}
-        return toResponse({{operationId}}({{#allParams}}{{paramName}}{{#hasMore}},{{/hasMore}}{{/allParams}}));
+        return toResponse({{operationId}}({{#allParams}}{{paramName}}{{#hasMore}},{{/hasMore}}{{/allParams}}), {{{vendorExtensions.responseCode}}});
         {{/hasReference}}
         {{^hasReference}}
         {{operationId}}({{#allParams}}{{paramName}}{{#hasMore}},{{/hasMore}}{{/allParams}});
-        return toResponse();
+        return toResponse({{{vendorExtensions.responseCode}}});
         {{/hasReference}}
     }
 
@@ -47,11 +45,11 @@ public interface {{classname}} {
 {{/operation}}
 {{/operations}}
 
-    default <T> ResponseEntity<T> toResponse(T result) {
-        return new ResponseEntity<>(result, OK);
+    default <T> ResponseEntity<T> toResponse(T result, int status) {
+        return new ResponseEntity<>(result, HttpStatus.resolve(status));
     }
 
-    default ResponseEntity<Void> toResponse() {
-        return new ResponseEntity<Void>(OK);
+    default ResponseEntity<Void> toResponse(int status) {
+        return new ResponseEntity<Void>(HttpStatus.resolve(status));
     }
 }

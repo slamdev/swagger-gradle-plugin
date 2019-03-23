@@ -131,6 +131,9 @@ public class CustomJavaCodegen extends AbstractJavaCodegen {
                         }
                     }
                 }
+                if (responses == null || responses.size() == 1) {
+                    operation.vendorExtensions.put("responseCode", responses == null ? "200" : responses.get(0).code);
+                }
                 if (operation.returnType == null) {
                     operation.hasReference = false;
                     operation.returnType = "Void";
