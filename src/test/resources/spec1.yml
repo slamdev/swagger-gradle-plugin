@@ -106,3 +106,5 @@ definitions:
       path:
         type: string
         example: /api/position/NEW1
+  EmptyObject:
+    type: object

@@ -28,9 +28,11 @@ public final class {{classname}} {{#parent}}extends {{{parent}}}{{/parent}} {{#s
   private {{{datatypeWithEnum}}} {{name}}{{^isListContainer}} = {{{defaultValue}}}{{/isListContainer}};
 
   {{/vars}}
+  {{^emptyVars}}
   public {{classname}}() {
   {{#vars}}
     {{name}} = {{{defaultValue}}};
   {{/vars}}
   }
+  {{/emptyVars}}
 }
