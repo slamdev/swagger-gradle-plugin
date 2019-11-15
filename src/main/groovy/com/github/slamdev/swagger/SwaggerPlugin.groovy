@@ -106,13 +106,16 @@ class SwaggerPlugin implements Plugin<Project> {
         }
 
         @SkipWhenEmpty
+        protected List getSpecs() {
+            clients*.flatten() + servers*.flatten()
+        }
+
         @InputFiles
         @PathSensitive(PathSensitivity.RELATIVE)
         protected List getClientSpecs() {
             clients*.flatten()
         }
 
-        @SkipWhenEmpty
         @InputFiles
         @PathSensitive(PathSensitivity.RELATIVE)
         protected List getServerSpecs() {
@@ -125,7 +128,6 @@ class SwaggerPlugin implements Plugin<Project> {
             ProgressLogger progressLogger = progressLoggerFactory.newOperation(SwaggerTask)
             progressLogger.start('Swagger code generation', null)
             try {
-                List specs = clients*.flatten() + servers*.flatten()
                 PercentageProgressFormatter progressFormatter = new PercentageProgressFormatter('Generating',
                         specs.size() + 2)
                 progressLogger.progress(progressFormatter.incrementAndGetProgress())
