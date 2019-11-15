@@ -119,7 +119,7 @@ class SwaggerPlugin implements Plugin<Project> {
         @InputFiles
         @PathSensitive(PathSensitivity.RELATIVE)
         protected List getServerSpecs() {
-            clients*.flatten()
+            servers*.flatten()
         }
 
         @SuppressWarnings('GroovyUnusedDeclaration')
