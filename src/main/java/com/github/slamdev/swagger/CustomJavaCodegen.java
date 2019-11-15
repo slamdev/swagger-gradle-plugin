@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+@SuppressWarnings("PMD.NPathComplexity")
 public class CustomJavaCodegen extends AbstractJavaCodegen {
 
     public CustomJavaCodegen() {

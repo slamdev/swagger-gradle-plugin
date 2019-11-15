@@ -31,7 +31,7 @@ class SwaggerPlugin implements Plugin<Project> {
 
     @SuppressWarnings('GroovyAssignabilityCheck')
     private static void createGenerateTask(Project project) {
-        Task task = project.tasks.create('swagger', SwaggerTask) { SwaggerTask task ->
+        Task task = project.tasks.create('swagger', SwaggerTask as Class<Task>) { SwaggerTask task ->
             task.destinationDir = project.file("${project.buildDir}/swagger-generated-sources")
         }
         project.tasks.withType(JavaCompile) { Task compileTask ->
@@ -105,12 +105,18 @@ class SwaggerPlugin implements Plugin<Project> {
             servers << (fileCollection.files as List)
         }
 
-        @SuppressWarnings('GroovyUnusedDeclaration')
         @SkipWhenEmpty
         @InputFiles
         @PathSensitive(PathSensitivity.RELATIVE)
-        protected List getSpecs() {
-            clients*.flatten() + servers*.flatten()
+        protected List getClientSpecs() {
+            clients*.flatten()
+        }
+
+        @SkipWhenEmpty
+        @InputFiles
+        @PathSensitive(PathSensitivity.RELATIVE)
+        protected List getServerSpecs() {
+            clients*.flatten()
         }
 
         @SuppressWarnings('GroovyUnusedDeclaration')
@@ -119,6 +125,7 @@ class SwaggerPlugin implements Plugin<Project> {
             ProgressLogger progressLogger = progressLoggerFactory.newOperation(SwaggerTask)
             progressLogger.start('Swagger code generation', null)
             try {
+                List specs = clients*.flatten() + servers*.flatten()
                 PercentageProgressFormatter progressFormatter = new PercentageProgressFormatter('Generating',
                         specs.size() + 2)
                 progressLogger.progress(progressFormatter.incrementAndGetProgress())
