@@ -54,7 +54,6 @@ class SwaggerPlugin implements Plugin<Project> {
 
         private final List<List<File>> servers = []
 
-        @PathSensitive(PathSensitivity.RELATIVE)
         @OutputDirectory
         File destinationDir
 
@@ -105,7 +104,7 @@ class SwaggerPlugin implements Plugin<Project> {
             servers << (fileCollection.files as List)
         }
 
-        @SkipWhenEmpty
+        @Internal
         protected List getSpecs() {
             clients*.flatten() + servers*.flatten()
         }
