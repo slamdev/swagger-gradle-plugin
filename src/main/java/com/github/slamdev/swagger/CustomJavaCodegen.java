@@ -88,6 +88,7 @@ public class CustomJavaCodegen extends AbstractJavaCodegen {
         return codegenModel;
     }
 
+    @Override
     public String toApiName(String name) {
         if ("Default".equals(name)) {
             name = "";

@@ -1,7 +1,7 @@
 apply plugin: 'pmd'
 
 pmd {
-    toolVersion = '5.5.5'
+    toolVersion = '6.20.0'
     ignoreFailures = !project.failOnStaticChecks
     consoleOutput = false
 }
@@ -19,7 +19,7 @@ tasks.withType(Pmd) {
 apply plugin: 'checkstyle'
 
 checkstyle {
-    toolVersion = '7.6.1'
+    toolVersion = '8.28'
     ignoreFailures = !project.failOnStaticChecks
     showViolations = false
 }
@@ -37,15 +37,15 @@ tasks.withType(Checkstyle) {
 apply plugin: 'codenarc'
 
 codenarc {
-    toolVersion = '0.27.0'
+    toolVersion = '1.6'
     ignoreFailures = !project.failOnStaticChecks
 }
 
 tasks.withType(CodeNarc) {
     if (name == 'codenarcTest') {
-        configFile = file('config/codenarc/codenarcTest.groovy')
+        configFile = file('config/codenarc/codenarcTest.properties')
     } else {
-        configFile = file('config/codenarc/codenarcMain.groovy')
+        configFile = file('config/codenarc/codenarcMain.properties')
         source file('build.gradle')
         source file('gradle/validation.gradle')
         source file('gradle/coverage.gradle')
